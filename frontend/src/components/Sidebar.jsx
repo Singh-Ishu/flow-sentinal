@@ -21,14 +21,14 @@ function Sidebar() {
                             <td>Unreported Nodes</td>
                             <td></td>
                         </tr>
-                        <tr>
+                        {/* <tr>
                             <td>Demand Unmet Nodes</td>
                             <td></td>
                         </tr>
                         <tr>
                             <td>Demand Met Nodes</td>
                             <td></td>
-                        </tr>
+                        </tr> */}
                     </tbody>
                 </table>
 

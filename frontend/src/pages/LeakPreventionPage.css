@@ -1,0 +1,30 @@
+.leak-prevention-grid {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  width: 100%;
+  min-height: 80vh;
+}
+.pipe-list-col {
+  flex: 1;
+  min-width: 320px;
+}
+.pipe-details-col {
+  flex: 3;
+  min-width: 0;
+}
+.pipe-list-panel {
+  background: #fff8f0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 2rem 1.5rem;
+  min-height: 400px;
+  height: 80vh;
+  box-sizing: border-box;
+}
+.pipe-list-title {
+  color: #ff9800;
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+} 

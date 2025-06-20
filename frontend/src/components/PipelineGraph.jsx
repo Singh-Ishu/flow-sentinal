@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import styles from "./PipelineGraph.css";
+import "./PipelineGraph.css";
 
 const dummyGraph = {
     nodes: [
@@ -34,7 +34,7 @@ const PipelineGraph = () => {
 
     // Simple SVG rendering for demo
     return (
-        <div className={styles.graphWrapper}>
+        <div className="graphWrapper">
             <svg width="100%" height="400" viewBox="0 0 600 400">
                 {/* Render edges */}
                 <line
@@ -124,23 +124,23 @@ const PipelineGraph = () => {
             </svg>
             {modalOpen && (
                 <div
-                    className={styles.modalOverlay}
+                    className="modalOverlay"
                     onClick={() => setModalOpen(false)}
                 >
                     <div
-                        className={styles.modalContent}
+                        className="modalContent"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button
-                            className={styles.closeBtn}
+                            className="closeBtn"
                             onClick={() => setModalOpen(false)}
                         >
                             &times;
                         </button>
-                        <h3 className={styles.modalTitle}>
+                        <h3 className="modalTitle">
                             {modalData?.label || modalData?.id}
                         </h3>
-                        <pre className={styles.modalPre}>
+                        <pre className="modalPre">
                             {JSON.stringify(modalData, null, 2)}
                         </pre>
                     </div>

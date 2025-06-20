@@ -1,18 +1,18 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import styles from "./Navbar.css";
+import "./Navbar.css";
 
 const Navbar = () => {
     return (
-        <nav className={styles.navbar}>
-            <div className={styles.logo}>Flow-Sentinel</div>
-            <ul className={styles.navLinks}>
+        <nav className="navbar">
+            <div className="logo">Flow-Sentinel</div>
+            <ul className="navLinks">
                 <li>
                     <NavLink
                         to="/"
                         end
                         className={({ isActive }) =>
-                            isActive ? styles.active : undefined
+                            isActive ? "active" : undefined
                         }
                     >
                         Home
@@ -22,7 +22,7 @@ const Navbar = () => {
                     <NavLink
                         to="/maintenance"
                         className={({ isActive }) =>
-                            isActive ? styles.active : undefined
+                            isActive ? "active" : undefined
                         }
                     >
                         Maintenance
@@ -32,7 +32,7 @@ const Navbar = () => {
                     <NavLink
                         to="/leak-prevention"
                         className={({ isActive }) =>
-                            isActive ? styles.active : undefined
+                            isActive ? "active" : undefined
                         }
                     >
                         Leak Prevention

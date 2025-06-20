@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import PipelineGraph from "../components/PipelineGraph";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
-import styles from "./HomePage.css";
+import "./HomePage.css";
 
 const HomePage = () => {
     const [graphData, setGraphData] = useState(null);
@@ -22,19 +22,19 @@ const HomePage = () => {
 
     if (loading) {
         return (
-            <div className={styles.loadingWrapper}>
-                <div className={styles.loader}></div>
+            <div className="loadingWrapper">
+                <div className="loader"></div>
             </div>
         );
     }
 
     return (
-        <div className={styles.homeGrid}>
-            <div className={styles.sidebarCol}>
+        <div className="homeGrid">
+            <div className="sidebarCol">
                 <Sidebar />
             </div>
-            <div className={styles.graphCol}>
-                <h1 className={styles.pageTitle}>Pipeline Network</h1>
+            <div className="graphCol">
+                <h1 className="pageTitle">Pipeline Network</h1>
                 <PipelineGraph data={graphData} />
             </div>
         </div>

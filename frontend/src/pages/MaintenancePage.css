@@ -1,0 +1,42 @@
+.maintenance-page {
+  padding: 2rem;
+  background: #f7f7f7;
+  min-height: 100vh;
+}
+.maintenance-title {
+  color: #ff9800;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+}
+.add-btn {
+  background: #ff9800;
+  color: #fff;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.add-btn:hover {
+  background: #fb8c00;
+}
+.maintenance-list {
+  margin-top: 1.5rem;
+}
+.status-group {
+  margin-bottom: 2rem;
+}
+.status-title {
+  color: #ff9800;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.7rem;
+}
+.no-tasks {
+  color: #888;
+  font-size: 1rem;
+  margin-left: 1rem;
+} 

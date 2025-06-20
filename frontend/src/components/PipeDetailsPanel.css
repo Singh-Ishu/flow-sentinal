@@ -1,0 +1,28 @@
+.pipe-details-panel {
+  background: #fff3e0;
+  border-radius: 8px;
+  padding: 2rem 1.5rem;
+  min-height: 400px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  margin-top: 1rem;
+}
+.pipe-details-title {
+  color: #ff9800;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+.leak-history, .pressure-history {
+  margin-top: 1.2rem;
+}
+.no-leaks {
+  color: #888;
+  font-size: 1rem;
+  margin-left: 1rem;
+}
+.select-pipe {
+  color: #888;
+  font-size: 1.1rem;
+  text-align: center;
+  margin-top: 2rem;
+} 

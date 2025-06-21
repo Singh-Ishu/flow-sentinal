@@ -2,41 +2,45 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fff;
-  border-bottom: 3px solid #ff9800;
-  padding: 0.5rem 2rem;
-  height: 60px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-sm) var(--space-xl);
+  height: 64px;
+  box-shadow: var(--shadow-md);
   position: sticky;
   top: 0;
   z-index: 100;
+  font-family: var(--font-main);
 }
 .logo {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #ff9800;
-  letter-spacing: 1px;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: 0.5px;
 }
 .navLinks {
   display: flex;
-  gap: 2rem;
+  gap: 2.2rem;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 .navLinks a {
   text-decoration: none;
-  color: #333;
-  font-size: 1.1rem;
+  color: var(--color-text);
+  font-size: 1.08rem;
   font-weight: 500;
-  padding-bottom: 2px;
+  padding: 0.2rem 0;
   border-bottom: 2px solid transparent;
-  transition: border-color 0.2s, color 0.2s;
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
 }
 .navLinks a:hover {
-  color: #ff9800;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
 }
 .active {
-  color: #ff9800 !important;
-  border-bottom: 2px solid #ff9800;
+  color: var(--color-primary) !important;
+  border-bottom: 2px solid var(--color-primary);
+  background: var(--color-primary-light);
 } 

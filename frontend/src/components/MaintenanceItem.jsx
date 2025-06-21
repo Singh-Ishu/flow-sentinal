@@ -14,7 +14,6 @@ const MaintenanceItem = ({ task, onEdit, onDelete }) => (
       <div className="item-title">{task.pipeId}</div>
       <div className="item-date">{task.date}</div>
       <div className="item-desc">{task.description}</div>
-      <span className={`item-status ${statusColor(task.status)}`}>{task.status}</span>
     </div>
     <div className="item-actions">
       <button onClick={() => onEdit(task)} className="edit-btn">Edit</button>

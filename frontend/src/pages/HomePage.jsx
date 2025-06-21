@@ -34,7 +34,7 @@ const HomePage = () => {
                 <Sidebar />
             </div>
             <div className="graphCol">
-                <h1 className="pageTitle">Pipeline Network</h1>
+                {/* <h1 className="pageTitle">Pipeline Network</h1> */}
                 <PipelineGraph data={graphData} />
             </div>
         </div>

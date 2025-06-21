@@ -1,5 +1,80 @@
+:root {
+  /* Orange color palette */
+  --color-primary: #ff9800;
+  --color-primary-dark: #fb8c00;
+  --color-primary-light: #ffe0b2;
+  --color-accent: #ffb300;
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --color-bg: #fff;
+  --color-bg-alt: #f9fafb;
+  --color-border: #e5e7eb;
+  --color-text: #222;
+  --color-muted: #888;
+
+  /* Spacing */
+  --space-xs: 0.2rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.02);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.04);
+
+  /* Font */
+  --font-main: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-main);
+}
+
+body {
+  background-color: #f6f8fa;
+  color: var(--color-text);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Minimal, modern base styles for light mode */
+body {
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  background: #f6f8fa;
+  color: #222;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
+}
+
+/* Remove default button and input styles for a cleaner look */
+button, input, select {
+  font-family: inherit;
+  font-size: 1rem;
+  outline: none;
 }

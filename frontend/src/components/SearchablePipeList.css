@@ -1,21 +1,29 @@
 .pipe-list {
   width: 100%;
+  font-family: var(--font-main);
 }
 .pipe-search {
   width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   font-size: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-md);
+  background: var(--color-bg-alt);
+  transition: border 0.2s;
+}
+.pipe-search:focus {
+  border: 1.5px solid var(--color-primary);
+  outline: none;
 }
 .pipe-list-items {
   max-height: 400px;
   overflow-y: auto;
-  background: #fffde7;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-  padding: 0.5rem 0;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-sm) 0;
+  border: 1px solid var(--color-border);
 }
 .pipe-list-item {
   display: flex;
@@ -24,14 +32,15 @@
   width: 100%;
   background: none;
   border: none;
-  padding: 0.7rem 1.2rem;
+  padding: var(--space-md) var(--space-lg);
   font-size: 1rem;
   cursor: pointer;
-  border-bottom: 1px solid #f3e3c0;
+  border-bottom: 1px solid var(--color-bg-alt);
   transition: background 0.2s;
+  border-radius: 0;
 }
 .pipe-list-item:hover {
-  background: #ffe0b2;
+  background: var(--color-primary-light);
 }
 .pipe-status {
   font-size: 0.95rem;
@@ -39,16 +48,16 @@
   text-transform: capitalize;
 }
 .pipe-status.ok {
-  color: #43a047;
+  color: var(--color-success);
 }
 .pipe-status.offline {
-  color: #e53935;
+  color: var(--color-danger);
 }
 .pipe-status.demand {
-  color: #ffb300;
+  color: var(--color-primary);
 }
 .no-pipes {
-  color: #888;
+  color: var(--color-muted);
   font-size: 1rem;
-  margin-left: 1rem;
+  margin-left: var(--space-md);
 } 

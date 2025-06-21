@@ -1,57 +1,66 @@
 .maintenance-form {
-  background: #fff3e0;
-  padding: 1.5rem;
-  border-radius: 8px;
+  background: var(--color-bg);
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
   max-width: 400px;
-  margin-bottom: 2rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  margin-bottom: var(--space-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
+  font-family: var(--font-main);
 }
 .form-group {
-  margin-bottom: 1.2rem;
+  margin-bottom: var(--space-md);
   display: flex;
   flex-direction: column;
 }
 .form-group label {
   font-weight: 500;
-  margin-bottom: 0.4rem;
-  color: #ff9800;
+  margin-bottom: var(--space-xs);
+  color: var(--color-primary);
 }
 .form-group input,
 .form-group select {
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   font-size: 1rem;
+  background: var(--color-bg-alt);
+  transition: border 0.2s;
+}
+.form-group input:focus,
+.form-group select:focus {
+  border: 1.5px solid var(--color-primary);
+  outline: none;
 }
 .form-actions {
   display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
 }
 button[type="submit"] {
-  background: #ff9800;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-bg);
   border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 4px;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-sm);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
 }
 button[type="submit"]:hover {
-  background: #fb8c00;
+  background: var(--color-primary-dark);
 }
 .cancel-btn {
-  background: #fff;
-  color: #ff9800;
-  border: 1px solid #ff9800;
-  padding: 0.6rem 1.2rem;
-  border-radius: 4px;
+  background: var(--color-bg);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-sm);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
 }
 .cancel-btn:hover {
-  background: #ff9800;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-bg);
 } 

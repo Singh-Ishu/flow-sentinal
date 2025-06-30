@@ -50,15 +50,24 @@ const nodeTypes = {
 
 const PipelineGraph = ({ data }) => {
   const [selectedElement, setSelectedElement] = useState(null);
+  const [hoveredElement, setHoveredElement] = useState(null);
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
+  const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
   const [showModal, setShowModal] = useState(false);
+  const [showHover, setShowHover] = useState(false);
 
   // Convert lat/lng to graph coordinates with better scaling
   const convertCoordinates = (lat, lng) => {
-    if (!lat || !lng) return { x: 0, y: 0 };
+    if (!lat || !lng) {
+      // Generate random position if no coordinates
+      return { 
+        x: (Math.random() - 0.5) * 2000, 
+        y: (Math.random() - 0.5) * 2000 
+      };
+    }
     
     // Use a larger scale factor to spread nodes out more
-    const scale = 5000;
+    const scale = 8000;
     const centerLat = 28.6139;
     const centerLng = 77.2090;
     
@@ -125,25 +134,31 @@ const PipelineGraph = ({ data }) => {
       return { nodes: [], edges: [] };
     }
 
-    console.log('Processing nodes:', data.nodes.length);
-    console.log('Processing edges:', data.edges.length);
+    console.log('Raw data nodes:', data.nodes.length);
+    console.log('Sample node:', data.nodes[0]);
 
-    const nodes = data.nodes.map(node => {
-      // Handle different coordinate formats
+    const nodes = data.nodes.map((node, index) => {
+      // Handle different coordinate formats more robustly
       let lat, lng;
-      if (node.position) {
-        lat = node.position.y / 100;
-        lng = node.position.x / 100;
-      } else if (node.latitude && node.longitude) {
+      
+      // Try different coordinate sources
+      if (node.latitude && node.longitude) {
         lat = node.latitude;
         lng = node.longitude;
+      } else if (node.position && node.position.y && node.position.x) {
+        lat = node.position.y / 100;
+        lng = node.position.x / 100;
       } else {
-        // Fallback to random position
-        lat = 28.6139 + (Math.random() - 0.5) * 0.1;
-        lng = 77.2090 + (Math.random() - 0.5) * 0.1;
+        // Fallback to distributed positions
+        const angle = (index / data.nodes.length) * 2 * Math.PI;
+        const radius = 500 + (index % 3) * 200;
+        lat = 28.6139 + Math.cos(angle) * 0.01 * radius / 100;
+        lng = 77.2090 + Math.sin(angle) * 0.01 * radius / 100;
       }
 
       const coords = convertCoordinates(lat, lng);
+      
+      console.log(`Node ${node.id}: lat=${lat}, lng=${lng}, coords=`, coords);
       
       return {
         id: node.id,
@@ -156,6 +171,11 @@ const PipelineGraph = ({ data }) => {
           size: getNodeSize(node.type, node.pressure),
           pressure: node.pressure,
           status: node.status,
+          max_pressure: node.max_pressure,
+          flow_rate: node.flow_rate,
+          latitude: lat,
+          longitude: lng,
+          last_updated: node.last_updated,
           ...node,
         },
         draggable: true,
@@ -185,7 +205,7 @@ const PipelineGraph = ({ data }) => {
     }));
 
     console.log('Processed nodes:', nodes.length);
-    console.log('Processed edges:', edges.length);
+    console.log('Node positions:', nodes.map(n => ({ id: n.id, pos: n.position })));
 
     return { nodes, edges };
   }, [data]);
@@ -198,7 +218,25 @@ const PipelineGraph = ({ data }) => {
     [setEdges]
   );
 
-  // Handle node click with proper modal positioning
+  // Handle node hover
+  const onNodeMouseEnter = useCallback((event, node) => {
+    const rect = event.currentTarget.closest('.react-flow').getBoundingClientRect();
+    const nodeRect = event.currentTarget.getBoundingClientRect();
+    
+    const x = nodeRect.left - rect.left + nodeRect.width / 2;
+    const y = nodeRect.top - rect.top - 10; // Position above node
+    
+    setHoveredElement(node.data);
+    setHoverPosition({ x, y });
+    setShowHover(true);
+  }, []);
+
+  const onNodeMouseLeave = useCallback(() => {
+    setShowHover(false);
+    setHoveredElement(null);
+  }, []);
+
+  // Handle node click with detailed modal
   const onNodeClick = useCallback((event, node) => {
     const rect = event.currentTarget.closest('.react-flow').getBoundingClientRect();
     const nodeRect = event.currentTarget.getBoundingClientRect();
@@ -208,8 +246,8 @@ const PipelineGraph = ({ data }) => {
     const y = nodeRect.top - rect.top + nodeRect.height / 2;
     
     // Ensure modal stays within bounds
-    const modalWidth = 300;
-    const modalHeight = 200;
+    const modalWidth = 400;
+    const modalHeight = 300;
     
     let finalX = x + 20;
     let finalY = y - modalHeight / 2;
@@ -228,6 +266,7 @@ const PipelineGraph = ({ data }) => {
     setSelectedElement(node.data);
     setModalPosition({ x: finalX, y: finalY });
     setShowModal(true);
+    setShowHover(false); // Hide hover when showing detailed modal
   }, []);
 
   // Handle edge click with proper modal positioning
@@ -238,8 +277,8 @@ const PipelineGraph = ({ data }) => {
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     
-    const modalWidth = 300;
-    const modalHeight = 200;
+    const modalWidth = 350;
+    const modalHeight = 250;
     
     let finalX = x + 20;
     let finalY = y - modalHeight / 2;
@@ -264,6 +303,8 @@ const PipelineGraph = ({ data }) => {
   const onPaneClick = useCallback(() => {
     setShowModal(false);
     setSelectedElement(null);
+    setShowHover(false);
+    setHoveredElement(null);
   }, []);
 
   const formatValue = (value, unit = '') => {
@@ -272,6 +313,11 @@ const PipelineGraph = ({ data }) => {
       return value.toLocaleString() + (unit ? ` ${unit}` : '');
     }
     return value;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleString();
   };
 
   if (!data || !data.nodes || !data.edges) {
@@ -324,22 +370,12 @@ const PipelineGraph = ({ data }) => {
             <span>Offline</span>
           </div>
 
-          <h4 style={{ marginTop: '1rem' }}>Flow Status</h4>
-          <div className="legend-item">
-            <div style={{ width: '16px', height: '3px', backgroundColor: '#22c55e' }}></div>
-            <span>Normal Flow</span>
-          </div>
-          <div className="legend-item">
-            <div style={{ width: '16px', height: '3px', backgroundColor: '#ff9800' }}></div>
-            <span>High Usage</span>
-          </div>
-          <div className="legend-item">
-            <div style={{ width: '16px', height: '3px', backgroundColor: '#ef4444' }}></div>
-            <span>Over Capacity</span>
-          </div>
-          <div className="legend-item">
-            <div style={{ width: '16px', height: '3px', backgroundColor: '#6b7280' }}></div>
-            <span>Low Usage</span>
+          <h4 style={{ marginTop: '1rem' }}>Interactions</h4>
+          <div style={{ fontSize: '0.8rem', color: '#666', lineHeight: '1.4' }}>
+            <div>• <strong>Hover:</strong> Quick info</div>
+            <div>• <strong>Click:</strong> Detailed view</div>
+            <div>• <strong>Drag:</strong> Move nodes</div>
+            <div>• <strong>Scroll:</strong> Zoom in/out</div>
           </div>
         </div>
       </div>
@@ -352,19 +388,21 @@ const PipelineGraph = ({ data }) => {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onNodeClick={onNodeClick}
+          onNodeMouseEnter={onNodeMouseEnter}
+          onNodeMouseLeave={onNodeMouseLeave}
           onEdgeClick={onEdgeClick}
           onPaneClick={onPaneClick}
           nodeTypes={nodeTypes}
           fitView
           fitViewOptions={{
-            padding: 0.1,
+            padding: 0.2,
             includeHiddenNodes: false,
             minZoom: 0.1,
             maxZoom: 1.5,
           }}
           minZoom={0.05}
-          maxZoom={2}
-          defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
+          maxZoom={3}
+          defaultViewport={{ x: 0, y: 0, zoom: 0.3 }}
           attributionPosition="bottom-left"
         >
           <Controls />
@@ -395,6 +433,35 @@ const PipelineGraph = ({ data }) => {
           </Panel>
         </ReactFlow>
 
+        {/* Hover tooltip - simple info */}
+        {showHover && hoveredElement && (
+          <div 
+            className="hover-tooltip"
+            style={{
+              position: 'absolute',
+              left: hoverPosition.x - 75,
+              top: hoverPosition.y - 60,
+              background: 'rgba(0,0,0,0.8)',
+              color: 'white',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              fontSize: '0.85rem',
+              pointerEvents: 'none',
+              zIndex: 1001,
+              whiteSpace: 'nowrap',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            }}
+          >
+            <div><strong>{hoveredElement.label || hoveredElement.name || hoveredElement.id}</strong></div>
+            <div>Type: {hoveredElement.type}</div>
+            <div>Status: {hoveredElement.status}</div>
+            {hoveredElement.pressure && (
+              <div>Pressure: {formatValue(hoveredElement.pressure, 'bar')}</div>
+            )}
+          </div>
+        )}
+
+        {/* Detailed click modal */}
         {showModal && selectedElement && (
           <div 
             className="element-modal"
@@ -403,6 +470,9 @@ const PipelineGraph = ({ data }) => {
               top: modalPosition.y,
               position: 'absolute',
               zIndex: 1000,
+              minWidth: '350px',
+              maxHeight: '400px',
+              overflowY: 'auto',
             }}
           >
             <div className="modal-content">
@@ -416,31 +486,110 @@ const PipelineGraph = ({ data }) => {
               <h3>{selectedElement.label || selectedElement.name || selectedElement.id}</h3>
               
               {selectedElement.type ? (
-                // Node details
+                // Node details - comprehensive
                 <div className="modal-details">
+                  <div><strong>ID:</strong> {selectedElement.id}</div>
                   <div><strong>Type:</strong> {selectedElement.type}</div>
-                  <div><strong>Status:</strong> {selectedElement.status}</div>
+                  <div><strong>Status:</strong> 
+                    <span style={{ 
+                      color: getNodeColor(selectedElement.status), 
+                      fontWeight: 'bold',
+                      marginLeft: '8px',
+                      textTransform: 'capitalize'
+                    }}>
+                      {selectedElement.status}
+                    </span>
+                  </div>
+                  
                   {selectedElement.pressure && (
-                    <div><strong>Pressure:</strong> {formatValue(selectedElement.pressure, 'bar')}</div>
-                  )}
-                  {selectedElement.flow_rate && (
-                    <div><strong>Flow Rate:</strong> {formatValue(selectedElement.flow_rate, 'L/min')}</div>
+                    <div><strong>Current Pressure:</strong> {formatValue(selectedElement.pressure, 'bar')}</div>
                   )}
                   {selectedElement.max_pressure && (
                     <div><strong>Max Pressure:</strong> {formatValue(selectedElement.max_pressure, 'bar')}</div>
                   )}
+                  {selectedElement.flow_rate && (
+                    <div><strong>Flow Rate:</strong> {formatValue(selectedElement.flow_rate, 'L/min')}</div>
+                  )}
+                  
+                  {selectedElement.latitude && selectedElement.longitude && (
+                    <>
+                      <div><strong>Latitude:</strong> {selectedElement.latitude.toFixed(6)}</div>
+                      <div><strong>Longitude:</strong> {selectedElement.longitude.toFixed(6)}</div>
+                    </>
+                  )}
+                  
+                  {selectedElement.last_updated && (
+                    <div><strong>Last Updated:</strong> {formatDate(selectedElement.last_updated)}</div>
+                  )}
+
+                  {/* Pressure utilization bar */}
+                  {selectedElement.pressure && selectedElement.max_pressure && (
+                    <div style={{ marginTop: '12px' }}>
+                      <strong>Pressure Utilization:</strong>
+                      <div style={{ 
+                        background: '#f0f0f0', 
+                        borderRadius: '4px', 
+                        overflow: 'hidden',
+                        height: '20px',
+                        marginTop: '4px'
+                      }}>
+                        <div style={{
+                          background: selectedElement.pressure / selectedElement.max_pressure > 0.8 ? '#ef4444' : 
+                                   selectedElement.pressure / selectedElement.max_pressure > 0.6 ? '#ff9800' : '#22c55e',
+                          height: '100%',
+                          width: `${Math.min(100, (selectedElement.pressure / selectedElement.max_pressure) * 100)}%`,
+                          transition: 'width 0.3s ease'
+                        }}></div>
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '2px' }}>
+                        {Math.round((selectedElement.pressure / selectedElement.max_pressure) * 100)}% of maximum
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
-                // Edge details
+                // Edge details - comprehensive
                 <div className="modal-details">
+                  <div><strong>Pipe ID:</strong> {selectedElement.id}</div>
                   <div><strong>Length:</strong> {formatValue(selectedElement.length, 'm')}</div>
                   <div><strong>Current Flow:</strong> {formatValue(selectedElement.current_flow, 'L/min')}</div>
-                  <div><strong>Capacity:</strong> {formatValue(selectedElement.flow_capacity, 'L/min')}</div>
+                  <div><strong>Flow Capacity:</strong> {formatValue(selectedElement.flow_capacity, 'L/min')}</div>
+                  
                   {selectedElement.current_flow && selectedElement.flow_capacity && (
-                    <div><strong>Utilization:</strong> {((selectedElement.current_flow / selectedElement.flow_capacity) * 100).toFixed(1)}%</div>
+                    <>
+                      <div><strong>Utilization:</strong> {((selectedElement.current_flow / selectedElement.flow_capacity) * 100).toFixed(1)}%</div>
+                      
+                      {/* Flow utilization bar */}
+                      <div style={{ marginTop: '8px' }}>
+                        <div style={{ 
+                          background: '#f0f0f0', 
+                          borderRadius: '4px', 
+                          overflow: 'hidden',
+                          height: '20px'
+                        }}>
+                          <div style={{
+                            background: getEdgeColor(selectedElement),
+                            height: '100%',
+                            width: `${Math.min(100, (selectedElement.current_flow / selectedElement.flow_capacity) * 100)}%`,
+                            transition: 'width 0.3s ease'
+                          }}></div>
+                        </div>
+                      </div>
+                    </>
                   )}
-                  <div><strong>Source:</strong> {selectedElement.source}</div>
-                  <div><strong>Target:</strong> {selectedElement.target}</div>
+                  
+                  <div><strong>Source Node:</strong> {selectedElement.source}</div>
+                  <div><strong>Target Node:</strong> {selectedElement.target}</div>
+                  
+                  {selectedElement.diameter && (
+                    <div><strong>Diameter:</strong> {formatValue(selectedElement.diameter, 'mm')}</div>
+                  )}
+                  {selectedElement.material && (
+                    <div><strong>Material:</strong> {selectedElement.material}</div>
+                  )}
+                  {selectedElement.pressure_loss && (
+                    <div><strong>Pressure Loss:</strong> {formatValue(selectedElement.pressure_loss, 'bar')}</div>
+                  )}
                 </div>
               )}
             </div>

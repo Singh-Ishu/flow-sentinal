@@ -43,6 +43,8 @@ class UniversalMaintenancePredictionService:
             # Prepare features for the model
             features = self._prepare_universal_features(component_data)
             
+            print(f"Prepared {len(features)} features for prediction: {features}")
+            
             # Make prediction (returns days until next maintenance)
             days_until_maintenance = self.model.predict([features])[0]
             
@@ -65,7 +67,7 @@ class UniversalMaintenancePredictionService:
                 "confidence": confidence,
                 "prediction_source": "ai_model",
                 "maintenance_type": self._recommend_maintenance_type(component_data, days_until_maintenance),
-                "estimated_cost": self._estimate_cost(component_data, days_until_maintenance),
+                "estimated_cost": self._estimate_cost_inr(component_data, days_until_maintenance),
                 "factors": self._identify_key_factors(features, component_data)
             }
             
@@ -94,7 +96,7 @@ class UniversalMaintenancePredictionService:
         # Get pressure loss (or equivalent stress metric)
         pressure_loss = self._get_pressure_loss(component_data)
         
-        # Base features (matching the training data structure)
+        # Base features (matching the training data structure - 15 features total)
         features = [
             age_years,                    # age_years
             size_metric,                  # length (or equivalent size)
@@ -107,27 +109,35 @@ class UniversalMaintenancePredictionService:
             self._get_maintenance_count(component_data)  # num_past_maintenances
         ]
         
-        # Material encoding (one-hot encoded features)
+        # Material encoding (one-hot encoded features) - 3 features
         material = self._get_material_equivalent(component_data)
         material_concrete = 1 if material == 'concrete' else 0
         material_pvc = 1 if material == 'pvc' else 0
         material_steel = 1 if material == 'steel' else 0
         
-        # Status encoding
+        # Status encoding - 2 features
         status = component_data.get('status', 'operational').lower()
         status_maintenance = 1 if status in ['maintenance', 'offline'] else 0
         status_operational = 1 if status in ['operational', 'active'] else 0
         
-        # Add encoded features
+        # Add encoded features (total should be 15)
         features.extend([
-            material_concrete,
-            material_pvc, 
-            material_steel,
-            status_maintenance,
-            status_operational
+            material_concrete,      # 10
+            material_pvc,          # 11
+            material_steel,        # 12
+            status_maintenance,    # 13
+            status_operational     # 14
         ])
         
-        return np.array(features)
+        # Ensure we have exactly 15 features
+        if len(features) != 15:
+            print(f"Warning: Expected 15 features, got {len(features)}")
+            # Pad or trim to 15 features
+            while len(features) < 15:
+                features.append(0.0)
+            features = features[:15]
+        
+        return np.array(features, dtype=np.float64)
     
     def _calculate_age(self, component_data: Dict) -> float:
         """Calculate component age in years"""
@@ -301,7 +311,7 @@ class UniversalMaintenancePredictionService:
         confidence = 0.8
         
         # Adjust based on data completeness
-        if len(features) == 14:  # All features present
+        if len(features) == 15:  # All features present
             confidence += 0.1
         
         # Adjust based on prediction reasonableness
@@ -350,20 +360,20 @@ class UniversalMaintenancePredictionService:
             }
             return type_maintenance.get(component_type, "routine_inspection")
     
-    def _estimate_cost(self, component_data: Dict, days_until: float) -> float:
-        """Estimate maintenance cost"""
+    def _estimate_cost_inr(self, component_data: Dict, days_until: float) -> float:
+        """Estimate maintenance cost in Indian Rupees"""
         component_type = component_data.get('type', 'pipe')
         
-        # Base costs by component type
+        # Base costs by component type in INR
         base_costs = {
-            'pump': 2500.0,
-            'valve': 800.0,
-            'sensor': 400.0,
-            'junction': 1200.0,
-            'pipe': 150.0  # per meter
+            'pump': 200000.0,      # ₹2,00,000
+            'valve': 65000.0,      # ₹65,000
+            'sensor': 32000.0,     # ₹32,000
+            'junction': 95000.0,   # ₹95,000
+            'pipe': 12000.0        # ₹12,000 per meter
         }
         
-        base_cost = base_costs.get(component_type, 1000.0)
+        base_cost = base_costs.get(component_type, 80000.0)
         
         # For pipes, multiply by length
         if component_type == 'pipe' and component_data.get('length'):
@@ -475,7 +485,7 @@ class UniversalMaintenancePredictionService:
             "confidence": 0.6,
             "prediction_source": "rule_based",
             "maintenance_type": self._recommend_maintenance_type(component_data, base_days),
-            "estimated_cost": self._estimate_cost(component_data, base_days),
+            "estimated_cost": self._estimate_cost_inr(component_data, base_days),
             "factors": ["Rule-based prediction (AI model unavailable)"]
         }
 

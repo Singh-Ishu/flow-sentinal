@@ -17,14 +17,16 @@ const UniversalComponentDetails = ({ component }) => {
       try {
         let endpoint;
         if (component.componentType === 'pipe') {
+          // Use GET method for pipes
           endpoint = `/pipes/${component.id}/maintenance-prediction`;
+          const response = await axios.get(endpoint);
+          setMaintenancePrediction(response.data);
         } else {
-          // For nodes, we'll use the predict/maintenance endpoint
-          endpoint = `/predict/maintenance?entity_type=node&entity_id=${component.id}`;
+          // Use GET method for nodes
+          endpoint = `/nodes/${component.id}/maintenance-prediction`;
+          const response = await axios.get(endpoint);
+          setMaintenancePrediction(response.data);
         }
-        
-        const response = await axios.post(endpoint);
-        setMaintenancePrediction(response.data);
       } catch (error) {
         console.error('Error fetching maintenance prediction:', error);
         setMaintenancePrediction(null);
@@ -56,6 +58,11 @@ const UniversalComponentDetails = ({ component }) => {
   const formatDateTime = (dateString) => {
     if (!dateString) return 'Not available';
     return new Date(dateString).toLocaleString();
+  };
+
+  const formatCurrency = (amount) => {
+    if (!amount) return 'Not available';
+    return `₹${amount.toLocaleString('en-IN')}`;
   };
 
   const getStatusColor = (status) => {
@@ -243,10 +250,10 @@ const UniversalComponentDetails = ({ component }) => {
                 <div className="prediction-date">
                   <strong>Next Maintenance Date:</strong>
                   <div className="date-display" style={{ color: getPriorityColor(maintenancePrediction.priority) }}>
-                    {formatDate(maintenancePrediction.predicted_maintenance_date || maintenancePrediction.next_maintenance_date)}
+                    {formatDate(maintenancePrediction.next_maintenance_date)}
                   </div>
                   <div className="days-until">
-                    ({maintenancePrediction.days_until_maintenance || 'TBD'} days from now)
+                    ({maintenancePrediction.days_until_maintenance} days from now)
                   </div>
                 </div>
 
@@ -268,7 +275,7 @@ const UniversalComponentDetails = ({ component }) => {
                 <div><strong>Maintenance Type:</strong> {getMaintenanceTypeDisplay(maintenancePrediction.maintenance_type)}</div>
                 
                 {maintenancePrediction.estimated_cost && (
-                  <div><strong>Estimated Cost:</strong> ${maintenancePrediction.estimated_cost.toLocaleString()}</div>
+                  <div><strong>Estimated Cost:</strong> {formatCurrency(maintenancePrediction.estimated_cost)}</div>
                 )}
 
                 {maintenancePrediction.confidence && (
@@ -297,22 +304,29 @@ const UniversalComponentDetails = ({ component }) => {
                     </ul>
                   </div>
                 )}
-
-                {maintenancePrediction.recommended_actions && maintenancePrediction.recommended_actions.length > 0 && (
-                  <div className="actions-section">
-                    <strong>Recommended Actions:</strong>
-                    <ul className="actions-list">
-                      {maintenancePrediction.recommended_actions.map((action, index) => (
-                        <li key={index}>{action}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </div>
 
               <div className="prediction-source">
                 Prediction source: {maintenancePrediction.prediction_source === 'ai_model' ? 
                   '🧠 Machine Learning Model' : '📋 Rule-based System'}
+              </div>
+
+              {/* Explanation Section */}
+              <div style={{ 
+                marginTop: '16px', 
+                padding: '12px', 
+                background: '#f8f9fa', 
+                borderRadius: '6px',
+                fontSize: '0.85rem',
+                color: '#666'
+              }}>
+                <strong>How predictions are calculated:</strong>
+                <ul style={{ margin: '8px 0 0 16px', lineHeight: '1.4' }}>
+                  <li><strong>Cost:</strong> Based on component type, size, urgency, and material complexity</li>
+                  <li><strong>Confidence:</strong> Determined by data completeness, prediction reasonableness, and component predictability</li>
+                  <li><strong>Priority:</strong> Calculated from days until maintenance (High: &lt;30 days, Medium: 30-90 days, Low: &gt;90 days)</li>
+                  <li><strong>Factors:</strong> Key variables influencing the prediction including age, utilization, and inspection history</li>
+                </ul>
               </div>
             </div>
           ) : (

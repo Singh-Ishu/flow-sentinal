@@ -196,7 +196,7 @@ async def delete_maintenance_task(task_id: int, db: Session = Depends(get_db)):
     delete_maintenance_log(db, task_id)
     return {"message": "Maintenance task deleted successfully"}
 
-# AI-powered maintenance prediction endpoint for pipes
+# Universal AI-powered maintenance prediction endpoint
 @app.get("/pipes/{pipe_id}/maintenance-prediction")
 async def predict_pipe_maintenance(pipe_id: str, db: Session = Depends(get_db)):
     """Get AI-powered maintenance prediction for a specific pipe"""
@@ -207,6 +207,7 @@ async def predict_pipe_maintenance(pipe_id: str, db: Session = Depends(get_db)):
     # Convert pipe data to dictionary for the AI model
     pipe_data = {
         "id": pipe.id,
+        "type": "pipe",
         "length": pipe.length,
         "diameter": pipe.diameter,
         "material": pipe.material,
@@ -223,6 +224,7 @@ async def predict_pipe_maintenance(pipe_id: str, db: Session = Depends(get_db)):
     
     # Add pipe information to the response
     prediction["pipe_id"] = pipe_id
+    prediction["component_type"] = "pipe"
     prediction["pipe_info"] = {
         "length": pipe.length,
         "diameter": pipe.diameter,
@@ -234,7 +236,45 @@ async def predict_pipe_maintenance(pipe_id: str, db: Session = Depends(get_db)):
     
     return prediction
 
-# AI/ML endpoints for future integration
+@app.get("/nodes/{node_id}/maintenance-prediction")
+async def predict_node_maintenance(node_id: str, db: Session = Depends(get_db)):
+    """Get AI-powered maintenance prediction for a specific node"""
+    node = get_pipe_node_by_id(db, node_id)
+    if not node:
+        raise HTTPException(status_code=404, detail="Node not found")
+    
+    # Convert node data to dictionary for the AI model
+    node_data = {
+        "id": node.id,
+        "type": node.type,
+        "pressure": node.pressure,
+        "max_pressure": node.max_pressure,
+        "flow_rate": node.flow_rate,
+        "status": node.status,
+        "last_updated": node.last_updated,
+        "latitude": node.latitude,
+        "longitude": node.longitude
+    }
+    
+    # Get AI prediction
+    prediction = maintenance_predictor.predict_maintenance_date(node_data)
+    
+    # Add node information to the response
+    prediction["node_id"] = node_id
+    prediction["component_type"] = "node"
+    prediction["node_info"] = {
+        "name": node.name,
+        "type": node.type,
+        "pressure": node.pressure,
+        "max_pressure": node.max_pressure,
+        "flow_rate": node.flow_rate,
+        "status": node.status,
+        "last_updated": node.last_updated.isoformat() if node.last_updated else None
+    }
+    
+    return prediction
+
+# Legacy endpoints for backward compatibility
 @app.post("/predict/leak")
 async def predict_leak_probability(pipe_id: str, db: Session = Depends(get_db)):
     """Predict leak probability for a specific pipe (placeholder for ML model)"""
@@ -243,7 +283,6 @@ async def predict_leak_probability(pipe_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Pipe not found")
     
     # Placeholder for ML model integration
-    # In the future, this would use actual ML models
     import random
     probability = random.uniform(0.1, 0.9)
     risk_level = "low" if probability < 0.3 else "medium" if probability < 0.7 else "high"
@@ -262,58 +301,26 @@ async def predict_leak_probability(pipe_id: str, db: Session = Depends(get_db)):
 
 @app.post("/predict/maintenance")
 async def predict_maintenance_needs(entity_type: str, entity_id: str, db: Session = Depends(get_db)):
-    """Predict maintenance needs for pipes or nodes (placeholder for ML model)"""
-    # Validate entity exists
+    """Predict maintenance needs for pipes or nodes using AI model"""
+    # Validate entity exists and get data
     if entity_type == "pipe":
         entity = get_pipe_by_id(db, entity_id)
         if not entity:
             raise HTTPException(status_code=404, detail="Pipe not found")
+        
+        # Use the pipe-specific endpoint
+        return await predict_pipe_maintenance(entity_id, db)
+        
     elif entity_type == "node":
         entity = get_pipe_node_by_id(db, entity_id)
         if not entity:
             raise HTTPException(status_code=404, detail="Node not found")
+        
+        # Use the node-specific endpoint
+        return await predict_node_maintenance(entity_id, db)
+        
     else:
         raise HTTPException(status_code=400, detail="Invalid entity type")
-    
-    # For nodes, create a simplified prediction
-    import random
-    from datetime import datetime, timedelta
-    
-    next_maintenance = datetime.now() + timedelta(days=random.randint(30, 180))
-    priority = random.choice(["low", "medium", "high"])
-    
-    # Generate maintenance type based on entity type and status
-    maintenance_types = {
-        "pump": ["calibration", "motor_maintenance", "seal_replacement"],
-        "valve": ["inspection", "actuator_check", "seal_replacement"],
-        "sensor": ["calibration", "cleaning", "replacement"],
-        "junction": ["inspection", "cleaning", "structural_check"]
-    }
-    
-    entity_type_for_maintenance = entity.type if hasattr(entity, 'type') else "pipe"
-    maintenance_type = random.choice(maintenance_types.get(entity_type_for_maintenance, ["inspection"]))
-    
-    return {
-        "entity_type": entity_type,
-        "entity_id": entity_id,
-        "predicted_maintenance_date": next_maintenance.isoformat(),
-        "priority": priority,
-        "maintenance_type": maintenance_type,
-        "estimated_cost": random.uniform(500, 3000),
-        "confidence": random.uniform(0.6, 0.9),
-        "factors": [
-            f"{entity_type_for_maintenance.title()} age and usage patterns",
-            "Historical maintenance data",
-            "Current operational status",
-            "Environmental factors"
-        ],
-        "recommended_actions": [
-            "Schedule detailed inspection",
-            "Monitor performance metrics",
-            "Prepare maintenance materials"
-        ],
-        "prediction_source": "rule_based"
-    }
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

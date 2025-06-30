@@ -13,13 +13,10 @@
     "@mui/material": "^7.1.2",
     "axios": "^1.10.0",
     "cytoscape": "^3.32.0",
-    "cytoscape-cose": "^2.2.0",
-    "cytoscape-popper": "^2.0.0",
     "react": "^19.1.0",
     "react-cytoscapejs": "^2.0.0",
     "react-dom": "^19.1.0",
-    "react-router-dom": "^7.6.2",
-    "tippy.js": "^6.3.7"
+    "react-router-dom": "^7.6.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

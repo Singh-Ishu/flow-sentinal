@@ -1,15 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import CytoscapeComponent from 'react-cytoscapejs';
-import cytoscape from 'cytoscape';
-import cose from 'cytoscape-cose';
-import popper from 'cytoscape-popper';
-import tippy from 'tippy.js';
-import 'tippy.js/dist/tippy.css';
 import './PipelineGraph.css';
-
-// Register extensions
-cytoscape.use(cose);
-cytoscape.use(popper);
 
 const PipelineGraph = ({ data }) => {
   const cyRef = useRef(null);
@@ -222,56 +213,6 @@ const PipelineGraph = ({ data }) => {
         }
       });
 
-      // Hover tooltips
-      cy.nodes().forEach(node => {
-        const ref = node.popperRef();
-        const tip = tippy(ref, {
-          content: () => {
-            const data = node.data();
-            return `
-              <div style="text-align: left;">
-                <strong>${data.label}</strong><br/>
-                Type: ${data.type}<br/>
-                Status: ${data.status}<br/>
-                ${data.pressure ? `Pressure: ${data.pressure} bar` : ''}
-              </div>
-            `;
-          },
-          allowHTML: true,
-          trigger: 'manual',
-          hideOnClick: false,
-          placement: 'top'
-        });
-
-        node.on('mouseover', () => tip.show());
-        node.on('mouseout', () => tip.hide());
-      });
-
-      cy.edges().forEach(edge => {
-        const ref = edge.popperRef();
-        const tip = tippy(ref, {
-          content: () => {
-            const data = edge.data();
-            const utilization = ((data.current_flow / data.flow_capacity) * 100).toFixed(1);
-            return `
-              <div style="text-align: left;">
-                <strong>Pipe ${data.id}</strong><br/>
-                Length: ${data.length?.toLocaleString()} m<br/>
-                Flow: ${data.current_flow?.toLocaleString()} / ${data.flow_capacity?.toLocaleString()} L/min<br/>
-                Utilization: ${utilization}%
-              </div>
-            `;
-          },
-          allowHTML: true,
-          trigger: 'manual',
-          hideOnClick: false,
-          placement: 'top'
-        });
-
-        edge.on('mouseover', () => tip.show());
-        edge.on('mouseout', () => tip.hide());
-      });
-
       return () => {
         cy.removeAllListeners();
       };
@@ -285,6 +226,16 @@ const PipelineGraph = ({ data }) => {
     }
     return value;
   };
+
+  if (!data || !data.nodes || !data.edges) {
+    return (
+      <div className="pipeline-graph-container">
+        <div className="graph-loading">
+          Loading pipeline data...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pipeline-graph-container">

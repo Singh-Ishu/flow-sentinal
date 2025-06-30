@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import random
+from mock_data_nodes_snippet import generated_nodes_data
+
 
 from models import PipeNode, Pipe, MaintenanceLog, SensorReading, LeakAlert
 
@@ -94,7 +96,7 @@ def populate_mock_data(db: Session):
             "longitude": 77.2690,
             "status": "leak"
         }
-    ]
+    ] +generated_nodes_data
     
     # Create nodes
     for node_data in nodes_data:

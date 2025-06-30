@@ -97,6 +97,8 @@ def generate_coordinates_around_city(city, radius_km=50, count=10):
 def populate_mock_data(db: Session):
     """Populate database with extensive mock data across India"""
     
+    print("Starting mock data population...")
+    
     # Clear existing data
     db.query(LeakAlert).delete()
     db.query(SensorReading).delete()
@@ -104,6 +106,7 @@ def populate_mock_data(db: Session):
     db.query(Pipe).delete()
     db.query(PipeNode).delete()
     db.commit()
+    print("Cleared existing data")
     
     # Generate nodes across all major cities
     all_nodes = []
@@ -184,10 +187,14 @@ def populate_mock_data(db: Session):
     
     # Group nodes by city for better connectivity
     nodes_by_city = {}
-    for i, city in enumerate(INDIAN_CITIES):
-        start_idx = sum(random.randint(8, 15) for _ in range(i))
-        end_idx = start_idx + random.randint(8, 15)
-        nodes_by_city[city["name"]] = all_nodes[start_idx:min(end_idx, len(all_nodes))]
+    node_index = 0
+    for city in INDIAN_CITIES:
+        nodes_per_city = random.randint(8, 15)
+        city_nodes = all_nodes[node_index:node_index + nodes_per_city]
+        nodes_by_city[city["name"]] = city_nodes
+        node_index += nodes_per_city
+        if node_index >= len(all_nodes):
+            break
     
     for city_name, city_nodes in nodes_by_city.items():
         if len(city_nodes) < 2:

@@ -50,10 +50,10 @@ async def startup_event():
     """Populate database with mock data on startup"""
     db = SessionLocal()
     try:
-        # Check if data already exists
-        if db.query(PipeNode).count() == 0:
-            populate_mock_data(db)
-            print("Mock data populated successfully!")
+        # Always repopulate with fresh data for development
+        print("Repopulating database with fresh mock data...")
+        populate_mock_data(db)
+        print("Mock data populated successfully!")
     finally:
         db.close()
 
@@ -66,6 +66,8 @@ async def get_graph_data(db: Session = Depends(get_db)):
     """Get pipeline graph data for visualization"""
     nodes = get_pipe_nodes(db)
     pipes = get_pipes(db)
+    
+    print(f"API: Found {len(nodes)} nodes and {len(pipes)} pipes")
     
     # Transform data for frontend graph visualization
     graph_nodes = []
@@ -92,6 +94,7 @@ async def get_graph_data(db: Session = Depends(get_db)):
             "status": "normal" if pipe.current_flow < pipe.flow_capacity * 0.8 else "high"
         })
     
+    print(f"API: Returning {len(graph_nodes)} graph nodes and {len(graph_edges)} graph edges")
     return GraphData(nodes=graph_nodes, edges=graph_edges)
 
 @app.get("/stats", response_model=SystemStats)
@@ -138,6 +141,7 @@ async def get_system_stats(db: Session = Depends(get_db)):
 async def get_all_pipes(db: Session = Depends(get_db)):
     """Get all pipes with their details"""
     pipes = get_pipes(db)
+    print(f"API: Returning {len(pipes)} pipes")
     return pipes
 
 @app.get("/pipes/{pipe_id}", response_model=PipeResponse)
@@ -152,6 +156,7 @@ async def get_pipe_details(pipe_id: str, db: Session = Depends(get_db)):
 async def get_all_nodes(db: Session = Depends(get_db)):
     """Get all pipe nodes"""
     nodes = get_pipe_nodes(db)
+    print(f"API: Returning {len(nodes)} nodes")
     return nodes
 
 @app.get("/nodes/{node_id}", response_model=PipeNodeResponse)

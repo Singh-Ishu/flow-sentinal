@@ -10,10 +10,15 @@ data_path = os.path.join("data", "maintenance_prediction_data.csv")
 df = pd.read_csv(data_path)
 
 # Preprocess
+# Fill missing values with 0 or an appropriate value
+df['pressure_loss'] = df['pressure_loss'].fillna(0)  # Fill missing pressure_loss with 0
+df['num_past_maintenances'] = df['num_past_maintenances'].fillna(0)  # Fill missing values with 0
+
+# One-hot encode categorical variables
 df = pd.get_dummies(df, columns=["material", "status"], drop_first=True)
 
 # Features and target
-X = df.drop("next_maintenance_days", axis=1)
+X = df.drop(columns=["next_maintenance_days", "entity_id", "entity_type"])  # Drop target and non-feature columns
 y = df["next_maintenance_days"]
 
 # Train/test split

@@ -6,18 +6,29 @@ import "./HomePage.css";
 
 const HomePage = () => {
     const [graphData, setGraphData] = useState(null);
-    const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        setLoading(true);
-        Promise.all([axios.get("/graph"), axios.get("/stats")]).then(
-            ([graphRes, statsRes]) => {
-                setGraphData(graphRes.data);
-                setStats(statsRes.data);
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const graphResponse = await axios.get("/graph");
+                setGraphData(graphResponse.data);
+                setError(null);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                setError("Failed to load pipeline data. Make sure the backend server is running.");
+            } finally {
                 setLoading(false);
             }
-        );
+        };
+
+        fetchData();
+        
+        // Refresh data every 30 seconds
+        const interval = setInterval(fetchData, 30000);
+        return () => clearInterval(interval);
     }, []);
 
     if (loading) {
@@ -28,13 +39,35 @@ const HomePage = () => {
         );
     }
 
+    if (error) {
+        return (
+            <div className="homeGrid">
+                <div className="sidebarCol">
+                    <Sidebar />
+                </div>
+                <div className="graphCol">
+                    <div style={{ 
+                        textAlign: 'center', 
+                        padding: '2rem', 
+                        background: '#fff', 
+                        borderRadius: '8px',
+                        color: '#ef4444'
+                    }}>
+                        <h2>Connection Error</h2>
+                        <p>{error}</p>
+                        <p>Please ensure the backend server is running on http://localhost:8000</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="homeGrid">
             <div className="sidebarCol">
                 <Sidebar />
             </div>
             <div className="graphCol">
-                {/* <h1 className="pageTitle">Pipeline Network</h1> */}
                 <PipelineGraph data={graphData} />
             </div>
         </div>

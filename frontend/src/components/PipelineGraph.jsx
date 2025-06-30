@@ -11,15 +11,15 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import './PipelineGraph.css';
 
-// Custom node component
+// Custom node component - simplified to circles only
 const CustomNode = ({ data, selected }) => {
   const getNodeStyle = () => {
     const baseStyle = {
       width: data.size || 30,
       height: data.size || 30,
       background: data.color || '#22c55e',
-      border: `2px solid ${selected ? '#2563eb' : '#fff'}`,
-      borderRadius: data.type === 'sensor' ? '50%' : '0',
+      border: `3px solid ${selected ? '#2563eb' : '#fff'}`,
+      borderRadius: '50%', // Always circular
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -29,25 +29,8 @@ const CustomNode = ({ data, selected }) => {
       cursor: 'pointer',
       transition: 'all 0.2s ease',
       position: 'relative',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
     };
-
-    // Apply shape based on type
-    switch (data.type) {
-      case 'pump':
-        baseStyle.clipPath = 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)';
-        break;
-      case 'junction':
-        baseStyle.clipPath = 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)';
-        break;
-      case 'valve':
-        baseStyle.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)';
-        break;
-      case 'sensor':
-        baseStyle.borderRadius = '50%';
-        break;
-      default:
-        baseStyle.borderRadius = '50%';
-    }
 
     return baseStyle;
   };
@@ -70,40 +53,59 @@ const PipelineGraph = ({ data }) => {
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
   const [showModal, setShowModal] = useState(false);
 
-  // Convert lat/lng to graph coordinates
+  // Convert lat/lng to graph coordinates with better scaling
   const convertCoordinates = (lat, lng) => {
-    const scale = 1000;
+    if (!lat || !lng) return { x: 0, y: 0 };
+    
+    // Use a larger scale factor to spread nodes out more
+    const scale = 5000;
+    const centerLat = 28.6139;
+    const centerLng = 77.2090;
+    
     return {
-      x: (lng - 77.2090) * scale,
-      y: (lat - 28.6139) * scale,
+      x: (lng - centerLng) * scale,
+      y: (lat - centerLat) * scale * -1, // Invert Y to match map orientation
     };
   };
 
   // Get node color based on status
   const getNodeColor = (status) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case 'active': return '#22c55e';
       case 'demand': return '#ff9800';
       case 'offline': return '#6b7280';
       case 'leak': return '#ef4444';
       case 'unreported': return '#8b5cf6';
+      case 'maintenance': return '#f59e0b';
       default: return '#22c55e';
     }
   };
 
   // Get node size based on type
-  const getNodeSize = (type) => {
-    switch (type) {
-      case 'pump': return 40;
-      case 'junction': return 35;
-      case 'valve': return 30;
-      case 'sensor': return 25;
-      default: return 30;
+  const getNodeSize = (type, pressure) => {
+    let baseSize = 25;
+    
+    // Slightly larger for different types
+    switch (type?.toLowerCase()) {
+      case 'pump': baseSize = 35; break;
+      case 'junction': baseSize = 30; break;
+      case 'valve': baseSize = 25; break;
+      case 'sensor': baseSize = 20; break;
+      default: baseSize = 25;
     }
+    
+    // Scale slightly based on pressure if available
+    if (pressure && pressure > 0) {
+      baseSize += Math.min(10, pressure * 2);
+    }
+    
+    return baseSize;
   };
 
   // Get edge color based on flow utilization
   const getEdgeColor = (edge) => {
+    if (!edge.current_flow || !edge.flow_capacity) return '#6b7280';
+    
     const utilization = edge.current_flow / edge.flow_capacity;
     if (utilization > 0.9) return '#ef4444';
     if (utilization > 0.7) return '#ff9800';
@@ -113,6 +115,7 @@ const PipelineGraph = ({ data }) => {
 
   // Get edge width based on diameter
   const getEdgeWidth = (diameter) => {
+    if (!diameter) return 3;
     return Math.max(2, Math.min(8, diameter / 50));
   };
 
@@ -122,22 +125,40 @@ const PipelineGraph = ({ data }) => {
       return { nodes: [], edges: [] };
     }
 
+    console.log('Processing nodes:', data.nodes.length);
+    console.log('Processing edges:', data.edges.length);
+
     const nodes = data.nodes.map(node => {
-      const coords = convertCoordinates(node.position.y / 100, node.position.x / 100);
+      // Handle different coordinate formats
+      let lat, lng;
+      if (node.position) {
+        lat = node.position.y / 100;
+        lng = node.position.x / 100;
+      } else if (node.latitude && node.longitude) {
+        lat = node.latitude;
+        lng = node.longitude;
+      } else {
+        // Fallback to random position
+        lat = 28.6139 + (Math.random() - 0.5) * 0.1;
+        lng = 77.2090 + (Math.random() - 0.5) * 0.1;
+      }
+
+      const coords = convertCoordinates(lat, lng);
+      
       return {
         id: node.id,
         type: 'custom',
         position: coords,
         data: {
-          label: node.name,
+          label: node.name || node.id,
           type: node.type,
           color: getNodeColor(node.status),
-          size: getNodeSize(node.type),
+          size: getNodeSize(node.type, node.pressure),
           pressure: node.pressure,
           status: node.status,
           ...node,
         },
-        draggable: false,
+        draggable: true,
       };
     });
 
@@ -163,6 +184,9 @@ const PipelineGraph = ({ data }) => {
       },
     }));
 
+    console.log('Processed nodes:', nodes.length);
+    console.log('Processed edges:', edges.length);
+
     return { nodes, edges };
   }, [data]);
 
@@ -174,23 +198,65 @@ const PipelineGraph = ({ data }) => {
     [setEdges]
   );
 
-  // Handle node click
+  // Handle node click with proper modal positioning
   const onNodeClick = useCallback((event, node) => {
+    const rect = event.currentTarget.closest('.react-flow').getBoundingClientRect();
+    const nodeRect = event.currentTarget.getBoundingClientRect();
+    
+    // Calculate position relative to the React Flow container
+    const x = nodeRect.left - rect.left + nodeRect.width / 2;
+    const y = nodeRect.top - rect.top + nodeRect.height / 2;
+    
+    // Ensure modal stays within bounds
+    const modalWidth = 300;
+    const modalHeight = 200;
+    
+    let finalX = x + 20;
+    let finalY = y - modalHeight / 2;
+    
+    // Adjust if modal would go outside container
+    if (finalX + modalWidth > rect.width) {
+      finalX = x - modalWidth - 20;
+    }
+    if (finalY < 0) {
+      finalY = 10;
+    }
+    if (finalY + modalHeight > rect.height) {
+      finalY = rect.height - modalHeight - 10;
+    }
+    
     setSelectedElement(node.data);
-    setModalPosition({
-      x: event.clientX - event.currentTarget.getBoundingClientRect().left,
-      y: event.clientY - event.currentTarget.getBoundingClientRect().top,
-    });
+    setModalPosition({ x: finalX, y: finalY });
     setShowModal(true);
   }, []);
 
-  // Handle edge click
+  // Handle edge click with proper modal positioning
   const onEdgeClick = useCallback((event, edge) => {
+    const rect = event.currentTarget.closest('.react-flow').getBoundingClientRect();
+    
+    // Position modal at click location
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    const modalWidth = 300;
+    const modalHeight = 200;
+    
+    let finalX = x + 20;
+    let finalY = y - modalHeight / 2;
+    
+    // Adjust if modal would go outside container
+    if (finalX + modalWidth > rect.width) {
+      finalX = x - modalWidth - 20;
+    }
+    if (finalY < 0) {
+      finalY = 10;
+    }
+    if (finalY + modalHeight > rect.height) {
+      finalY = rect.height - modalHeight - 10;
+    }
+    
     setSelectedElement(edge.data);
-    setModalPosition({
-      x: event.clientX - event.currentTarget.getBoundingClientRect().left,
-      y: event.clientY - event.currentTarget.getBoundingClientRect().top,
-    });
+    setModalPosition({ x: finalX, y: finalY });
     setShowModal(true);
   }, []);
 
@@ -224,37 +290,37 @@ const PipelineGraph = ({ data }) => {
         <div className="legend">
           <h4>Node Types</h4>
           <div className="legend-item">
-            <div className="legend-symbol pump"></div>
+            <div className="legend-symbol" style={{ backgroundColor: '#22c55e', borderRadius: '50%' }}></div>
             <span>Pump</span>
           </div>
           <div className="legend-item">
-            <div className="legend-symbol junction"></div>
+            <div className="legend-symbol" style={{ backgroundColor: '#22c55e', borderRadius: '50%' }}></div>
             <span>Junction</span>
           </div>
           <div className="legend-item">
-            <div className="legend-symbol valve"></div>
+            <div className="legend-symbol" style={{ backgroundColor: '#22c55e', borderRadius: '50%' }}></div>
             <span>Valve</span>
           </div>
           <div className="legend-item">
-            <div className="legend-symbol sensor"></div>
+            <div className="legend-symbol" style={{ backgroundColor: '#22c55e', borderRadius: '50%' }}></div>
             <span>Sensor</span>
           </div>
           
           <h4 style={{ marginTop: '1rem' }}>Status</h4>
           <div className="legend-item">
-            <div className="legend-symbol" style={{ backgroundColor: '#22c55e' }}></div>
+            <div className="legend-symbol" style={{ backgroundColor: '#22c55e', borderRadius: '50%' }}></div>
             <span>Active</span>
           </div>
           <div className="legend-item">
-            <div className="legend-symbol" style={{ backgroundColor: '#ff9800' }}></div>
+            <div className="legend-symbol" style={{ backgroundColor: '#ff9800', borderRadius: '50%' }}></div>
             <span>Needs Attention</span>
           </div>
           <div className="legend-item">
-            <div className="legend-symbol" style={{ backgroundColor: '#ef4444' }}></div>
+            <div className="legend-symbol" style={{ backgroundColor: '#ef4444', borderRadius: '50%' }}></div>
             <span>Critical/Leak</span>
           </div>
           <div className="legend-item">
-            <div className="legend-symbol" style={{ backgroundColor: '#6b7280' }}></div>
+            <div className="legend-symbol" style={{ backgroundColor: '#6b7280', borderRadius: '50%' }}></div>
             <span>Offline</span>
           </div>
 
@@ -290,6 +356,15 @@ const PipelineGraph = ({ data }) => {
           onPaneClick={onPaneClick}
           nodeTypes={nodeTypes}
           fitView
+          fitViewOptions={{
+            padding: 0.1,
+            includeHiddenNodes: false,
+            minZoom: 0.1,
+            maxZoom: 1.5,
+          }}
+          minZoom={0.05}
+          maxZoom={2}
+          defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
           attributionPosition="bottom-left"
         >
           <Controls />
@@ -298,8 +373,12 @@ const PipelineGraph = ({ data }) => {
             nodeStrokeWidth={3}
             zoomable
             pannable
+            style={{
+              height: 120,
+              width: 200,
+            }}
           />
-          <Background variant="dots" gap={12} size={1} />
+          <Background variant="dots" gap={20} size={1} />
           
           <Panel position="top-right">
             <div style={{ 
@@ -320,8 +399,10 @@ const PipelineGraph = ({ data }) => {
           <div 
             className="element-modal"
             style={{
-              left: modalPosition.x + 20,
-              top: modalPosition.y - 100,
+              left: modalPosition.x,
+              top: modalPosition.y,
+              position: 'absolute',
+              zIndex: 1000,
             }}
           >
             <div className="modal-content">

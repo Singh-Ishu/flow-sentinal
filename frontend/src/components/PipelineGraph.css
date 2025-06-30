@@ -1,17 +1,221 @@
-.graphWrapper {
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
-    padding: var(--space-md);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.pipeline-graph-container {
+  display: flex;
+  gap: 1rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-md);
+  font-family: var(--font-main);
 }
-.graphWrapper img {
-    width: 100%;
-    max-width: 600px;
-    height: auto;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
+
+.graph-controls {
+  min-width: 200px;
+  background: var(--color-bg-alt);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+}
+
+.legend h4 {
+  margin: 0 0 var(--space-sm) 0;
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+  font-size: 0.85rem;
+}
+
+.legend-symbol {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.legend-symbol.circle {
+  border-radius: 50%;
+}
+
+.legend-symbol.diamond {
+  transform: rotate(45deg);
+  background-color: #22c55e;
+}
+
+.legend-symbol.octagon {
+  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+  background-color: #22c55e;
+}
+
+.legend-symbol.triangle {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  background-color: #22c55e;
+}
+
+.legend-symbol.pump {
+  background-color: #22c55e;
+}
+
+.legend-symbol.junction {
+  background-color: #22c55e;
+}
+
+.legend-symbol.valve {
+  background-color: #22c55e;
+}
+
+.legend-symbol.sensor {
+  background-color: #22c55e;
+}
+
+.graph-wrapper {
+  flex: 1;
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: #fafafa;
+}
+
+.element-modal {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-md);
+  min-width: 250px;
+  max-width: 350px;
+  pointer-events: auto;
+}
+
+.modal-content {
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--color-danger);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.modal-close:hover {
+  background: #dc2626;
+}
+
+.modal-content h3 {
+  margin: 0 0 var(--space-md) 0;
+  color: var(--color-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.modal-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.modal-details div {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.modal-details strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* Cytoscape container styling */
+.pipeline-graph-container [data-id] {
+  cursor: pointer;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .pipeline-graph-container {
+    flex-direction: column;
+  }
+  
+  .graph-controls {
+    min-width: auto;
+  }
+  
+  .graph-wrapper {
+    height: 400px;
+  }
+  
+  .element-modal {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    max-width: 90vw;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+}
+
+/* Tooltip styling */
+.tippy-box {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  font-size: 0.85rem;
+}
+
+.tippy-arrow {
+  color: var(--color-bg);
+}
+
+/* Loading state */
+.graph-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: var(--color-muted);
+  font-size: 1.1rem;
+}
+
+/* Error state */
+.graph-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: var(--color-danger);
+  text-align: center;
+  padding: var(--space-lg);
+}
+
+.graph-error h3 {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: 1.2rem;
+}
+
+.graph-error p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-muted);
 }

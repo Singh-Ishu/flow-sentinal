@@ -27,7 +27,7 @@ dist-ssr
 backend/venv/
 __pycache__/
 *.pyc
-ai/venv/
+ai/myvenv/
 
 # Node
 frontend/node_modules/

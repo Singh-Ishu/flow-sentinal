@@ -14,9 +14,10 @@ from schemas import (
 from crud import (
     get_pipe_nodes, get_pipes, get_maintenance_logs,
     create_maintenance_log, update_maintenance_log, delete_maintenance_log,
-    get_maintenance_log_by_id
+    get_maintenance_log_by_id, get_pipe_by_id
 )
 from mock_data import populate_mock_data
+from ai_prediction_service import maintenance_predictor
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -194,6 +195,44 @@ async def delete_maintenance_task(task_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Maintenance task not found")
     delete_maintenance_log(db, task_id)
     return {"message": "Maintenance task deleted successfully"}
+
+# AI-powered maintenance prediction endpoint
+@app.get("/pipes/{pipe_id}/maintenance-prediction")
+async def predict_pipe_maintenance(pipe_id: str, db: Session = Depends(get_db)):
+    """Get AI-powered maintenance prediction for a specific pipe"""
+    pipe = get_pipe_by_id(db, pipe_id)
+    if not pipe:
+        raise HTTPException(status_code=404, detail="Pipe not found")
+    
+    # Convert pipe data to dictionary for the AI model
+    pipe_data = {
+        "id": pipe.id,
+        "length": pipe.length,
+        "diameter": pipe.diameter,
+        "material": pipe.material,
+        "current_flow": pipe.current_flow,
+        "flow_capacity": pipe.flow_capacity,
+        "pressure_loss": pipe.pressure_loss,
+        "installation_date": pipe.installation_date,
+        "last_inspection": pipe.last_inspection,
+        "status": pipe.status
+    }
+    
+    # Get AI prediction
+    prediction = maintenance_predictor.predict_maintenance_date(pipe_data)
+    
+    # Add pipe information to the response
+    prediction["pipe_id"] = pipe_id
+    prediction["pipe_info"] = {
+        "length": pipe.length,
+        "diameter": pipe.diameter,
+        "material": pipe.material,
+        "status": pipe.status,
+        "installation_date": pipe.installation_date.isoformat() if pipe.installation_date else None,
+        "last_inspection": pipe.last_inspection.isoformat() if pipe.last_inspection else None
+    }
+    
+    return prediction
 
 # AI/ML endpoints for future integration
 @app.post("/predict/leak")

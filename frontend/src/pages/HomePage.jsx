@@ -18,16 +18,18 @@ const HomePage = () => {
                 setError(null);
             } catch (error) {
                 console.error("Error fetching data:", error);
-                setError("Failed to load pipeline data. Make sure the backend server is running.");
+                setError(
+                    "Failed to load pipeline data. Make sure the backend server is running."
+                );
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-        
-        // Refresh data every 30 seconds
-        const interval = setInterval(fetchData, 30000);
+
+        // Refresh data every 5 minutes
+        const interval = setInterval(fetchData, 300000);
         return () => clearInterval(interval);
     }, []);
 
@@ -46,16 +48,21 @@ const HomePage = () => {
                     <Sidebar />
                 </div>
                 <div className="graphCol">
-                    <div style={{ 
-                        textAlign: 'center', 
-                        padding: '2rem', 
-                        background: '#fff', 
-                        borderRadius: '8px',
-                        color: '#ef4444'
-                    }}>
+                    <div
+                        style={{
+                            textAlign: "center",
+                            padding: "2rem",
+                            background: "#fff",
+                            borderRadius: "8px",
+                            color: "#ef4444",
+                        }}
+                    >
                         <h2>Connection Error</h2>
                         <p>{error}</p>
-                        <p>Please ensure the backend server is running on http://localhost:8000</p>
+                        <p>
+                            Please ensure the backend server is running on
+                            http://localhost:8000
+                        </p>
                     </div>
                 </div>
             </div>

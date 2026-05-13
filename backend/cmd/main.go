@@ -1,6 +1,10 @@
 package main
 
-import "log"
+import (
+	"log"
+
+	"github.com/Singh-Ishu/flow-sentinel/backend/internal/api/rest"
+)
 
 func main() {
 	router := rest.SetupRoutes(nil, nil, nil)

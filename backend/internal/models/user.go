@@ -1,33 +1,47 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
-type Telemetry struct {
-	ID          int64     `db:"id" json:"id"`
-	NodeID      string    `db:"node_id" json:"node_id"`         // unique identifier for pipeline segment/sensor
-	FlowRate    float64   `db:"flow_rate" json:"flow_rate"`     // L/min
-	Pressure    float64   `db:"pressure" json:"pressure"`       // PSI
-	Temperature float64   `db:"temperature" json:"temperature"` // Celsius
-	Timestamp   time.Time `db:"timestamp" json:"timestamp"`
-	CreatedAt   time.Time `db:"created_at" json:"created_at"` // when received by backend
+type Role string
+
+const (
+	RoleAdmin      Role = "admin"
+	RoleAnalyst    Role = "analyst"
+	RoleContractor Role = "contractor"
+)
+
+type User struct {
+	ID           int       `db:"id" json:"id"`
+	Email        string    `db:"email" json:"email"`
+	FullName     string    `db:"full_name" json:"full_name"`
+	PasswordHash string    `db:"password_hash" json:"-"` // never expose in JSON
+	Role         Role      `db:"role" json:"role"`
+	CreatedAt    time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
 }
 
-type TelemetryIngestRequest struct {
-	NodeID      string    `json:"node_id" binding:"required"`
-	FlowRate    float64   `json:"flow_rate" binding:"required"`
-	Pressure    float64   `json:"pressure" binding:"required"`
-	Temperature float64   `json:"temperature" binding:"required"`
-	Timestamp   time.Time `json:"timestamp" binding:"required"`
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
 }
 
-type TelemetryHistoryFilter struct {
-	NodeID    string
-	StartTime time.Time
-	EndTime   time.Time
-	Limit     int
-	Offset    int
+type LoginResponse struct {
+	Token     string `json:"token"`
+	User      User   `json:"user"`
+	ExpiresAt int64  `json:"expires_at"`
 }
 
-type LatestTelemetryResponse struct {
-	Nodes map[string]Telemetry `json:"nodes"` // keyed by node_id
+type CreateUserRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	FullName string `json:"full_name" binding:"required"`
+	Password string `json:"password" binding:"required,min=8"`
+	Role     Role   `json:"role" binding:"required"`
+}
+
+type UpdateUserRequest struct {
+	Email    string `json:"email" binding:"omitempty,email"`
+	FullName string `json:"full_name" binding:"omitempty"`
+	Role     Role   `json:"role" binding:"omitempty"`
 }

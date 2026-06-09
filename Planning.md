@@ -4,11 +4,10 @@
 
 **Backend:** Go + gRPC + REST API  
 **Frontend:** React + TypeScript  
-**Database:** PostgreSQL (TimescaleDB) + Redis  
+**Database:** PostgreSQL  
 **Real-time:** WebSocket (Socket.io or native WS)  
 **Hosting:** Railway  
 **Stress Testing:** k6  
-**Containerization:** Docker
 
 ---
 
@@ -136,8 +135,6 @@ pipeline-leak-detection/
 │   │   ├── db/
 │   │   │   ├── postgres.go           # DB connection, migrations
 │   │   │   └── queries.go            # SQL queries (prepared statements)
-│   │   ├── cache/
-│   │   │   └── redis.go              # Redis pub/sub, cache logic
 │   │   ├── models/
 │   │   │   ├── telemetry.go
 │   │   │   ├── alert.go
@@ -154,8 +151,6 @@ pipeline-leak-detection/
 │   │   └── websocket/
 │   │       └── hub.go                # WebSocket hub for live updates
 │   ├── migrations/
-│   │   ├── 001_init_schema.sql
-│   │   ├── 002_timescaledb_hypertable.sql
 │   │   └── ...
 │   ├── go.mod
 │   ├── go.sum

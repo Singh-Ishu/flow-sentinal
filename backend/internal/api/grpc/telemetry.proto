@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package telemetry;
+
+option go_package = "flow-sentinel/internal/api/grpc;grpc_telemetry";
+
+import "google/protobuf/timestamp.proto";
+
+service TelemetryService {
+  rpc IngestTelemetry (TelemetryRequest) returns (TelemetryResponse) {}
+  rpc StreamTelemetry (stream TelemetryRequest) returns (TelemetryResponse) {}
+}
+
+message TelemetryRequest {
+  string node_id = 1;
+  double flow_rate = 2;
+  double pressure = 3;
+  double temperature = 4;
+  google.protobuf.Timestamp timestamp = 5;
+}
+
+message TelemetryResponse {
+  bool success = 1;
+  string message = 2;
+}

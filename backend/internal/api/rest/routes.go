@@ -1,10 +1,10 @@
 package rest
 
 import (
-	"github.com/Singh-Ishu/flow-sentinel/internal/api/rest/handlers"
-	"github.com/Singh-Ishu/flow-sentinel/internal/middleware"
-	"github.com/Singh-Ishu/flow-sentinel/internal/service"
-	"github.com/Singh-Ishu/flow-sentinel/internal/websocket"
+	"flow-sentinel/internal/api/rest/handlers"
+	"flow-sentinel/internal/middleware"
+	"flow-sentinel/internal/service"
+	"flow-sentinel/internal/websocket"
 	"github.com/gin-gonic/gin"
 )
 
